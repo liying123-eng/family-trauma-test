@@ -247,7 +247,7 @@
         <!-- 测试次数用完页面 -->
         <div class="card limit-msg hidden" id="limitPage">
             <h2>😊 测试次数已用完</h2>
-            <p>您已完成2次免费测试</p>
+            <p>您已完成2次测试</p>
             <div class="purchase-banner" style="margin-top: 20px;">
                 <p>🎉 想要继续测试？</p>
                 <p style="margin-top: 10px;">复购仅需 <span style="font-size: 1.5em; color: #ffeb3b;">1.5元</span></p>
@@ -259,7 +259,7 @@
         <div class="card hidden" id="testPage">
             <div class="attempts-info" id="attemptsInfo"></div>
             <div class="purchase-banner">
-                <p>💡 提示：每人可免费测试2次</p>
+                <p>💡 提示：每人可测试2次</p>
                 <p style="margin-top: 5px; font-size: 0.9em;">如需更多测试次数，<a href="#" onclick="alert('请联系客服购买复测链接，仅需1.5元')">点击复购仅需1.5元 →</a></p>
             </div>
             <div class="progress">
@@ -482,10 +482,40 @@
             updateNavButtons();
         };
 
+        // 跳转到指定题目
+        function jumpToQuestion(index) {
+            // 隐藏当前题
+            document.getElementById(`question-${questions[currentQuestion].id}`).classList.add('hidden');
+            // 显示目标题
+            currentQuestion = index;
+            document.getElementById(`question-${questions[currentQuestion].id}`).classList.remove('hidden');
+            updateProgress();
+            updateNavButtons();
+        }
+
         // 提交测试
         function submitTest() {
-            if (Object.keys(answers).length < questions.length) {
-                alert('请回答所有题目后再提交');
+            const answeredCount = Object.keys(answers).length;
+            if (answeredCount < questions.length) {
+                // 找到未答的题
+                const unanswered = [];
+                questions.forEach(q => {
+                    if (answers[q.id] === undefined) {
+                        unanswered.push(q.id);
+                    }
+                });
+                
+                if (unanswered.length === 1) {
+                    alert(`您还有1道题未完成：第${unanswered[0]}题`);
+                    // 跳转到未答的题
+                    jumpToQuestion(unanswered[0] - 1);
+                } else {
+                    const qList = unanswered.slice(0, 3).join('、');
+                    const more = unanswered.length > 3 ? `等${unanswered.length}道题` : '';
+                    alert(`您还有${unanswered.length}道题未完成：第${qList}题${more}`);
+                    // 跳转到第一个未答的题
+                    jumpToQuestion(unanswered[0] - 1);
+                }
                 return;
             }
             
