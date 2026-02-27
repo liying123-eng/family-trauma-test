@@ -210,6 +210,43 @@
         .result-advice h3 {
             margin-bottom: 10px;
         }
+        .all-levels {
+            margin: 30px 0;
+            text-align: left;
+        }
+        .all-levels h3 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #5d4037;
+        }
+        .level-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            background: #f5f5f5;
+        }
+        .level-item.current {
+            background: linear-gradient(135deg, #ff8a65 0%, #ff7043 100%);
+            color: white;
+            font-weight: bold;
+        }
+        .level-emoji {
+            font-size: 24px;
+            margin-right: 12px;
+        }
+        .level-info {
+            flex: 1;
+        }
+        .level-name {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        .level-range {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
         .hidden {
             display: none;
         }
@@ -282,6 +319,12 @@
             <div class="result-title" id="resultTitle"></div>
             <div class="result-level" id="resultLevel"></div>
             <div class="result-desc" id="resultDesc"></div>
+            
+            <div class="all-levels">
+                <h3>📊 所有等级对照</h3>
+                <div id="allLevelsList"></div>
+            </div>
+            
             <div class="result-advice">
                 <h3>💝 给你的小建议</h3>
                 <p id="resultAdvice"></p>
@@ -303,26 +346,26 @@
             { id: 2, text: "当你遇到困难或挫折时，会向父母寻求安慰吗？", dimension: "support" },
             { id: 3, text: "父母会主动关心你的情绪状态和内心感受吗？", dimension: "support" },
             { id: 4, text: "在你成长过程中，感受到过被无条件的爱着吗？", dimension: "support" },
-            { id: 5, text: "父母会鼓励你追求自己的梦想，而不是强加他们的期望？", dimension: "support" },
+            { id: 5, text: "父母会鼓励你追求自己的梦想，而不是强加他们的期望吗？", dimension: "support" },
             
             // 维度2：控制与自由（5题）
-            { id: 6, text: "父母尊重你的个人选择和决定，即使与他们的想法不同？", dimension: "control" },
+            { id: 6, text: "父母尊重你的个人选择和决定，即使与他们的想法不同吗？", dimension: "control" },
             { id: 7, text: "你有属于自己的私人空间和隐私吗？", dimension: "control" },
-            { id: 8, text: "父母会过度干涉你的社交圈和交友选择吗？（反向计分）", dimension: "control" },
+            { id: 8, text: "父母会过度干涉你的社交圈和交友选择吗？", dimension: "control" },
             { id: 9, text: "你的兴趣爱好得到了父母的支持和理解吗？", dimension: "control" },
-            { id: 10, text: "父母会用'为你好'来要求你按照他们的方式生活吗？（反向计分）", dimension: "control" },
+            { id: 10, text: "父母会用'为你好'来要求你按照他们的方式生活吗？", dimension: "control" },
             
             // 维度3：言语沟通（5题）
-            { id: 11, text: "父母很少对你使用贬低、讽刺或侮辱性的语言？", dimension: "communication" },
-            { id: 12, text: "家庭中的沟通方式通常是平和理性的，而非大喊大叫？", dimension: "communication" },
+            { id: 11, text: "父母对你说话的方式通常是尊重和鼓励的吗？", dimension: "communication" },
+            { id: 12, text: "家庭中的沟通方式通常是平和理性的吗？", dimension: "communication" },
             { id: 13, text: "你的意见和想法在家里能得到平等的倾听和尊重吗？", dimension: "communication" },
-            { id: 14, text: "父母很少拿你与别人家的孩子做比较？", dimension: "communication" },
-            { id: 15, text: "在家里表达不同意见不会招致责骂或惩罚？", dimension: "communication" },
+            { id: 14, text: "父母会经常拿你与别人家的孩子做比较吗？", dimension: "communication" },
+            { id: 15, text: "在家里表达不同意见会受到责骂或惩罚吗？", dimension: "communication" },
             
             // 维度4：情感忽视（5题）
             { id: 16, text: "父母会记得对你来说重要的日子（生日、考试等）吗？", dimension: "neglect" },
             { id: 17, text: "当你生病或身体不适时，会得到及时的关心和照顾吗？", dimension: "neglect" },
-            { id: 18, text: "你很少感觉自己被忽视或像透明人一样存在？", dimension: "neglect" },
+            { id: 18, text: "你感觉自己被父母重视和关注吗？", dimension: "neglect" },
             { id: 19, text: "父母会主动了解你的学习/工作/生活状况吗？", dimension: "neglect" },
             { id: 20, text: "在成长过程中，你感受到的情感回应是及时且恰当的吗？", dimension: "neglect" }
         ];
@@ -410,17 +453,6 @@
             
             // 更新按钮显示
             updateNavButtons();
-            
-            // 自动显示下一题
-            setTimeout(() => {
-                if (currentQuestion < questions.length - 1) {
-                    document.getElementById(`question-${questions[currentQuestion].id}`).classList.add('hidden');
-                    currentQuestion++;
-                    document.getElementById(`question-${questions[currentQuestion].id}`).classList.remove('hidden');
-                    updateProgress();
-                    updateNavButtons();
-                }
-            }, 300);
         }
 
         // 返回上一题
@@ -542,6 +574,15 @@
             showResult(percentage);
         }
 
+        // 所有等级定义
+        const allLevels = [
+            { emoji: "☀️", name: "阳光开朗大男孩/女孩", range: "0-20分", desc: "充满爱与支持，几乎没有创伤" },
+            { emoji: "🌤️", name: "偶尔多云的小可爱", range: "21-40分", desc: "有挫折但总体健康，轻度影响" },
+            { emoji: "⛅", name: "阴天模式的小蘑菇", range: "41-60分", desc: "经历过情感忽视，中度影响" },
+            { emoji: "🌧️", name: "小雨淅沥的仙人掌", range: "61-80分", desc: "有明显情感创伤，较重影响" },
+            { emoji: "⛈️", name: "暴风雨幸存者", range: "81-100分", desc: "经历严重情感虐待，深度创伤" }
+        ];
+
         // 显示结果
         function showResult(score) {
             document.getElementById('testPage').classList.add('hidden');
@@ -556,6 +597,14 @@
             if (remaining <= 0) {
                 document.getElementById('purchaseBanner').style.display = 'block';
             }
+            
+            // 确定当前等级索引
+            let currentLevelIndex;
+            if (score <= 20) currentLevelIndex = 0;
+            else if (score <= 40) currentLevelIndex = 1;
+            else if (score <= 60) currentLevelIndex = 2;
+            else if (score <= 80) currentLevelIndex = 3;
+            else currentLevelIndex = 4;
             
             let result;
             if (score <= 20) {
@@ -605,6 +654,23 @@
             document.getElementById('resultLevel').textContent = result.level;
             document.getElementById('resultDesc').textContent = result.desc;
             document.getElementById('resultAdvice').textContent = result.advice;
+            
+            // 显示所有等级
+            let levelsHtml = '';
+            allLevels.forEach((level, index) => {
+                const isCurrent = index === currentLevelIndex;
+                levelsHtml += `
+                    <div class="level-item ${isCurrent ? 'current' : ''}">
+                        <span class="level-emoji">${level.emoji}</span>
+                        <div class="level-info">
+                            <div class="level-name">${level.name}</div>
+                            <div class="level-range">${level.range} · ${level.desc}</div>
+                        </div>
+                        ${isCurrent ? '<span>✓ 你的位置</span>' : ''}
+                    </div>
+                `;
+            });
+            document.getElementById('allLevelsList').innerHTML = levelsHtml;
         }
 
         // 回车提交密码
