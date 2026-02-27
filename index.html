@@ -152,11 +152,47 @@
             color: #5d4037;
             margin-bottom: 15px;
         }
-        .result-score {
-            font-size: 3em;
+        .result-level {
+            font-size: 1.3em;
             color: #ff7043;
             font-weight: bold;
             margin-bottom: 20px;
+            padding: 10px 20px;
+            background: #fff3e0;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        .attempts-info {
+            text-align: center;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: #1976d2;
+        }
+        .purchase-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .purchase-banner a {
+            color: #ffeb3b;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .nav-buttons .btn {
+            flex: 1;
+        }
+        .btn-secondary {
+            background: #9e9e9e;
         }
         .result-desc {
             font-size: 1.1em;
@@ -211,12 +247,21 @@
         <!-- 测试次数用完页面 -->
         <div class="card limit-msg hidden" id="limitPage">
             <h2>😊 测试次数已用完</h2>
-            <p>您已完成2次测试，感谢参与！</p>
-            <p style="margin-top: 20px; color: #999;">如需再次测试，请清除浏览器缓存</p>
+            <p>您已完成2次免费测试</p>
+            <div class="purchase-banner" style="margin-top: 20px;">
+                <p>🎉 想要继续测试？</p>
+                <p style="margin-top: 10px;">复购仅需 <span style="font-size: 1.5em; color: #ffeb3b;">1.5元</span></p>
+                <p style="margin-top: 10px;"><a href="#" onclick="alert('请联系客服购买复测链接')">点击购买复测链接 →</a></p>
+            </div>
         </div>
 
         <!-- 测试页面 -->
         <div class="card hidden" id="testPage">
+            <div class="attempts-info" id="attemptsInfo"></div>
+            <div class="purchase-banner">
+                <p>💡 提示：每人可免费测试2次</p>
+                <p style="margin-top: 5px; font-size: 0.9em;">如需更多测试次数，<a href="#" onclick="alert('请联系客服购买复测链接，仅需1.5元')">点击复购仅需1.5元 →</a></p>
+            </div>
             <div class="progress">
                 <span id="progressText">第 1 / 20 题</span>
                 <div class="progress-bar">
@@ -224,18 +269,27 @@
                 </div>
             </div>
             <div id="questionsContainer"></div>
-            <button class="btn" id="submitBtn" onclick="submitTest()" style="width: 100%; margin-top: 20px;">查看结果</button>
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" id="prevBtn" onclick="prevQuestion()" style="display:none;">← 上一题</button>
+                <button class="btn" id="submitBtn" onclick="submitTest()">查看结果</button>
+            </div>
         </div>
 
         <!-- 结果页面 -->
         <div class="card result-card hidden" id="resultPage">
+            <div class="attempts-info" id="resultAttemptsInfo"></div>
             <div class="result-emoji" id="resultEmoji"></div>
             <div class="result-title" id="resultTitle"></div>
-            <div class="result-score" id="resultScore"></div>
+            <div class="result-level" id="resultLevel"></div>
             <div class="result-desc" id="resultDesc"></div>
             <div class="result-advice">
                 <h3>💝 给你的小建议</h3>
                 <p id="resultAdvice"></p>
+            </div>
+            <div class="purchase-banner" id="purchaseBanner" style="display:none;">
+                <p>🎉 测试次数已用完？</p>
+                <p style="margin-top: 10px;">复购仅需 <span style="font-size: 1.5em; color: #ffeb3b;">1.5元</span> 即可再次测试</p>
+                <p style="margin-top: 10px;"><a href="#" onclick="alert('请联系客服购买复测链接')">点击购买复测链接 →</a></p>
             </div>
             <button class="btn" onclick="location.reload()" style="margin-top: 30px;">重新测试</button>
         </div>
@@ -301,11 +355,19 @@
                 } else {
                     document.getElementById('passwordPage').classList.add('hidden');
                     document.getElementById('testPage').classList.remove('hidden');
+                    updateAttemptsInfo();
                     renderQuestions();
                 }
             } else {
                 document.getElementById('passwordError').textContent = "密码错误，请重试";
             }
+        }
+
+        // 更新剩余次数显示
+        function updateAttemptsInfo() {
+            const attempts = parseInt(localStorage.getItem('familyTestAttempts') || '0');
+            const remaining = MAX_ATTEMPTS - attempts;
+            document.getElementById('attemptsInfo').textContent = `剩余测试次数：${remaining}次`;
         }
 
         // 渲染题目
@@ -346,6 +408,9 @@
             questionDiv.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
             element.classList.add('selected');
             
+            // 更新按钮显示
+            updateNavButtons();
+            
             // 自动显示下一题
             setTimeout(() => {
                 if (currentQuestion < questions.length - 1) {
@@ -353,8 +418,54 @@
                     currentQuestion++;
                     document.getElementById(`question-${questions[currentQuestion].id}`).classList.remove('hidden');
                     updateProgress();
+                    updateNavButtons();
                 }
             }, 300);
+        }
+
+        // 返回上一题
+        function prevQuestion() {
+            if (currentQuestion > 0) {
+                document.getElementById(`question-${questions[currentQuestion].id}`).classList.add('hidden');
+                currentQuestion--;
+                document.getElementById(`question-${questions[currentQuestion].id}`).classList.remove('hidden');
+                updateProgress();
+                updateNavButtons();
+            }
+        }
+
+        // 更新导航按钮
+        function updateNavButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // 显示/隐藏上一题按钮
+            prevBtn.style.display = currentQuestion > 0 ? 'block' : 'none';
+            
+            // 最后一题显示提交按钮
+            if (currentQuestion === questions.length - 1) {
+                submitBtn.textContent = '查看结果';
+                submitBtn.onclick = submitTest;
+            } else {
+                submitBtn.textContent = '下一题 →';
+                submitBtn.onclick = nextQuestion;
+            }
+        }
+
+        // 下一题
+        function nextQuestion() {
+            // 检查当前题是否已答
+            const currentQid = questions[currentQuestion].id;
+            if (answers[currentQid] === undefined) {
+                alert('请先选择答案');
+                return;
+            }
+            
+            document.getElementById(`question-${questions[currentQuestion].id}`).classList.add('hidden');
+            currentQuestion++;
+            document.getElementById(`question-${questions[currentQuestion].id}`).classList.remove('hidden');
+            updateProgress();
+            updateNavButtons();
         }
 
         // 更新进度
@@ -363,6 +474,13 @@
             document.getElementById('progressText').textContent = `第 ${currentQuestion + 1} / ${questions.length} 题`;
             document.getElementById('progressFill').style.width = `${progress}%`;
         }
+
+        // 渲染题目后更新按钮
+        const originalRenderQuestions = renderQuestions;
+        renderQuestions = function() {
+            originalRenderQuestions();
+            updateNavButtons();
+        };
 
         // 提交测试
         function submitTest() {
@@ -399,11 +517,22 @@
             document.getElementById('testPage').classList.add('hidden');
             document.getElementById('resultPage').classList.remove('hidden');
             
+            // 更新剩余次数
+            const attempts = parseInt(localStorage.getItem('familyTestAttempts') || '0');
+            const remaining = MAX_ATTEMPTS - attempts;
+            document.getElementById('resultAttemptsInfo').textContent = `剩余测试次数：${remaining}次`;
+            
+            // 如果次数用完，显示购买 banner
+            if (remaining <= 0) {
+                document.getElementById('purchaseBanner').style.display = 'block';
+            }
+            
             let result;
             if (score <= 20) {
                 result = {
                     emoji: "☀️",
                     title: "阳光开朗大男孩/女孩",
+                    level: "成长环境：充满爱与支持，几乎没有创伤",
                     desc: "你就像清晨的第一缕阳光，温暖又明亮！在充满爱的环境中长大，你拥有坚实的内心和满满的正能量。你懂得爱自己，也懂得爱别人。",
                     advice: "继续保持这份阳光吧！你的温暖会感染身边的人。记得偶尔也要允许自己有脆弱的时候，完美不是必须的。"
                 };
@@ -411,6 +540,7 @@
                 result = {
                     emoji: "🌤️",
                     title: "偶尔多云的小可爱",
+                    level: "成长环境：有挫折但总体健康，轻度影响",
                     desc: "你是一颗 resilient 的小种子！虽然偶尔会遇到小挫折，但你已经学会了在风雨中成长。你的内心有力量，也有温柔。",
                     advice: "你已经很棒了！学会善待自己，给自己多一些肯定。那些小乌云终会散去，你的天空会越来越晴朗。"
                 };
@@ -418,6 +548,7 @@
                 result = {
                     emoji: "⛅",
                     title: "阴天模式的小蘑菇",
+                    level: "成长环境：经历过情感忽视，中度影响",
                     desc: "你是一只坚强的小蘑菇，在阴暗中也能找到生长的力量。经历过一些情感的风雨，但你依然在努力向上。",
                     advice: "你的感受是真实的，也是重要的。试着多关注自己的内心需求，学会对自己说'我值得被好好对待'。"
                 };
@@ -425,6 +556,7 @@
                 result = {
                     emoji: "🌧️",
                     title: "小雨淅沥的仙人掌",
+                    level: "成长环境：有明显情感创伤，较重影响",
                     desc: "你是一株在干旱中依然存活的仙人掌，有着惊人的生命力。你经历了不少情感的雨季，但你依然站在这里。",
                     advice: "你的坚强让人心疼。请记得，寻求帮助不是软弱，而是智慧。考虑和信任的朋友聊聊，或寻求专业的心理支持。"
                 };
@@ -432,6 +564,7 @@
                 result = {
                     emoji: "⛈️",
                     title: "暴风雨幸存者",
+                    level: "成长环境：经历严重情感虐待，深度创伤",
                     desc: "你是一位真正的勇士，经历了情感的风暴却依然前行。你的生存本身就是一种胜利，你的坚韧令人敬佩。",
                     advice: "请温柔地对待自己。过去的经历不是你的错，你值得被好好爱着。强烈建议寻求专业心理咨询，让专业人士陪你一起疗愈。"
                 };
@@ -439,7 +572,7 @@
             
             document.getElementById('resultEmoji').textContent = result.emoji;
             document.getElementById('resultTitle').textContent = result.title;
-            document.getElementById('resultScore').textContent = score + "分";
+            document.getElementById('resultLevel').textContent = result.level;
             document.getElementById('resultDesc').textContent = result.desc;
             document.getElementById('resultAdvice').textContent = result.advice;
         }
