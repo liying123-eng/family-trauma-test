@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原生家庭伤害指数测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            color: #5d4037;
+        }
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .password-section {
+            text-align: center;
+        }
+        .password-section h2 {
+            color: #5d4037;
+            margin-bottom: 20px;
+        }
+        .password-input {
+            width: 100%;
+            max-width: 300px;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .password-input:focus {
+            outline: none;
+            border-color: #ff8a65;
+        }
+        .btn {
+            background: linear-gradient(135deg, #ff8a65 0%, #ff7043 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255,138,101,0.4);
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .question {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .question:last-child {
+            border-bottom: none;
+        }
+        .question-text {
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option:hover {
+            background: #ffebee;
+        }
+        .option input {
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+            accent-color: #ff7043;
+        }
+        .option.selected {
+            background: #ffebee;
+            border: 2px solid #ff7043;
+        }
+        .progress {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #666;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #ff8a65 0%, #ff7043 100%);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        .result-card {
+            text-align: center;
+            padding: 40px;
+        }
+        .result-emoji {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        .result-title {
+            font-size: 1.8em;
+            color: #5d4037;
+            margin-bottom: 15px;
+        }
+        .result-score {
+            font-size: 3em;
+            color: #ff7043;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .result-desc {
+            font-size: 1.1em;
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+        .result-advice {
+            background: #fff3e0;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: left;
+            color: #5d4037;
+        }
+        .result-advice h3 {
+            margin-bottom: 10px;
+        }
+        .hidden {
+            display: none;
+        }
+        .error-msg {
+            color: #f44336;
+            margin-top: 10px;
+        }
+        .limit-msg {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .limit-msg h2 {
+            color: #5d4037;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 原生家庭伤害指数测试</h1>
+            <p>了解你的成长环境，拥抱更好的自己</p>
+        </div>
+
+        <!-- 密码验证页面 -->
+        <div class="card password-section" id="passwordPage">
+            <h2>🔐 请输入访问密码</h2>
+            <input type="password" class="password-input" id="passwordInput" placeholder="请输入密码">
+            <br>
+            <button class="btn" onclick="checkPassword()">进入测试</button>
+            <p class="error-msg" id="passwordError"></p>
+        </div>
+
+        <!-- 测试次数用完页面 -->
+        <div class="card limit-msg hidden" id="limitPage">
+            <h2>😊 测试次数已用完</h2>
+            <p>您已完成2次测试，感谢参与！</p>
+            <p style="margin-top: 20px; color: #999;">如需再次测试，请清除浏览器缓存</p>
+        </div>
+
+        <!-- 测试页面 -->
+        <div class="card hidden" id="testPage">
+            <div class="progress">
+                <span id="progressText">第 1 / 20 题</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 5%"></div>
+                </div>
+            </div>
+            <div id="questionsContainer"></div>
+            <button class="btn" id="submitBtn" onclick="submitTest()" style="width: 100%; margin-top: 20px;">查看结果</button>
+        </div>
+
+        <!-- 结果页面 -->
+        <div class="card result-card hidden" id="resultPage">
+            <div class="result-emoji" id="resultEmoji"></div>
+            <div class="result-title" id="resultTitle"></div>
+            <div class="result-score" id="resultScore"></div>
+            <div class="result-desc" id="resultDesc"></div>
+            <div class="result-advice">
+                <h3>💝 给你的小建议</h3>
+                <p id="resultAdvice"></p>
+            </div>
+            <button class="btn" onclick="location.reload()" style="margin-top: 30px;">重新测试</button>
+        </div>
+    </div>
+
+    <script>
+        // 测试题目
+        const questions = [
+            // 维度1：情感支持（5题）
+            { id: 1, text: "当你取得成绩时，父母会真诚地为你开心并给予肯定吗？", dimension: "support" },
+            { id: 2, text: "当你遇到困难或挫折时，会向父母寻求安慰吗？", dimension: "support" },
+            { id: 3, text: "父母会主动关心你的情绪状态和内心感受吗？", dimension: "support" },
+            { id: 4, text: "在你成长过程中，感受到过被无条件的爱着吗？", dimension: "support" },
+            { id: 5, text: "父母会鼓励你追求自己的梦想，而不是强加他们的期望？", dimension: "support" },
+            
+            // 维度2：控制与自由（5题）
+            { id: 6, text: "父母尊重你的个人选择和决定，即使与他们的想法不同？", dimension: "control" },
+            { id: 7, text: "你有属于自己的私人空间和隐私吗？", dimension: "control" },
+            { id: 8, text: "父母会过度干涉你的社交圈和交友选择吗？（反向计分）", dimension: "control" },
+            { id: 9, text: "你的兴趣爱好得到了父母的支持和理解吗？", dimension: "control" },
+            { id: 10, text: "父母会用'为你好'来要求你按照他们的方式生活吗？（反向计分）", dimension: "control" },
+            
+            // 维度3：言语沟通（5题）
+            { id: 11, text: "父母很少对你使用贬低、讽刺或侮辱性的语言？", dimension: "communication" },
+            { id: 12, text: "家庭中的沟通方式通常是平和理性的，而非大喊大叫？", dimension: "communication" },
+            { id: 13, text: "你的意见和想法在家里能得到平等的倾听和尊重吗？", dimension: "communication" },
+            { id: 14, text: "父母很少拿你与别人家的孩子做比较？", dimension: "communication" },
+            { id: 15, text: "在家里表达不同意见不会招致责骂或惩罚？", dimension: "communication" },
+            
+            // 维度4：情感忽视（5题）
+            { id: 16, text: "父母会记得对你来说重要的日子（生日、考试等）吗？", dimension: "neglect" },
+            { id: 17, text: "当你生病或身体不适时，会得到及时的关心和照顾吗？", dimension: "neglect" },
+            { id: 18, text: "你很少感觉自己被忽视或像透明人一样存在？", dimension: "neglect" },
+            { id: 19, text: "父母会主动了解你的学习/工作/生活状况吗？", dimension: "neglect" },
+            { id: 20, text: "在成长过程中，你感受到的情感回应是及时且恰当的吗？", dimension: "neglect" }
+        ];
+
+        // 选项
+        const options = [
+            { value: 0, text: "完全不符合" },
+            { value: 1, text: "不太符合" },
+            { value: 2, text: "一般" },
+            { value: 3, text: "比较符合" },
+            { value: 4, text: "完全符合" }
+        ];
+
+        // 访问密码（可以修改）
+        const ACCESS_PASSWORD = "family2024";
+        const MAX_ATTEMPTS = 2;
+
+        let answers = {};
+        let currentQuestion = 0;
+
+        // 检查密码
+        function checkPassword() {
+            const input = document.getElementById('passwordInput').value;
+            if (input === ACCESS_PASSWORD) {
+                // 检查测试次数
+                const attempts = parseInt(localStorage.getItem('familyTestAttempts') || '0');
+                if (attempts >= MAX_ATTEMPTS) {
+                    document.getElementById('passwordPage').classList.add('hidden');
+                    document.getElementById('limitPage').classList.remove('hidden');
+                } else {
+                    document.getElementById('passwordPage').classList.add('hidden');
+                    document.getElementById('testPage').classList.remove('hidden');
+                    renderQuestions();
+                }
+            } else {
+                document.getElementById('passwordError').textContent = "密码错误，请重试";
+            }
+        }
+
+        // 渲染题目
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+            
+            questions.forEach((q, index) => {
+                const qDiv = document.createElement('div');
+                qDiv.className = 'question';
+                qDiv.id = `question-${q.id}`;
+                if (index !== 0) qDiv.classList.add('hidden');
+                
+                let optionsHtml = '';
+                options.forEach(opt => {
+                    optionsHtml += `
+                        <label class="option" onclick="selectOption(${q.id}, ${opt.value}, this)">
+                            <input type="radio" name="q${q.id}" value="${opt.value}">
+                            <span>${opt.text}</span>
+                        </label>
+                    `;
+                });
+                
+                qDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${q.text}</div>
+                    <div class="options">${optionsHtml}</div>
+                `;
+                container.appendChild(qDiv);
+            });
+        }
+
+        // 选择选项
+        function selectOption(qid, value, element) {
+            answers[qid] = value;
+            
+            // 更新UI
+            const questionDiv = document.getElementById(`question-${qid}`);
+            questionDiv.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            // 自动显示下一题
+            setTimeout(() => {
+                if (currentQuestion < questions.length - 1) {
+                    document.getElementById(`question-${questions[currentQuestion].id}`).classList.add('hidden');
+                    currentQuestion++;
+                    document.getElementById(`question-${questions[currentQuestion].id}`).classList.remove('hidden');
+                    updateProgress();
+                }
+            }, 300);
+        }
+
+        // 更新进度
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progressText').textContent = `第 ${currentQuestion + 1} / ${questions.length} 题`;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+        }
+
+        // 提交测试
+        function submitTest() {
+            if (Object.keys(answers).length < questions.length) {
+                alert('请回答所有题目后再提交');
+                return;
+            }
+            
+            // 计算分数（反向题目需要反转）
+            let totalScore = 0;
+            const reverseQuestions = [8, 10]; // 反向计分的题目
+            
+            questions.forEach(q => {
+                let value = answers[q.id];
+                if (reverseQuestions.includes(q.id)) {
+                    value = 4 - value; // 反转分数
+                }
+                totalScore += value;
+            });
+            
+            // 转换为百分制
+            const maxScore = questions.length * 4;
+            const percentage = Math.round((totalScore / maxScore) * 100);
+            
+            // 记录测试次数
+            const attempts = parseInt(localStorage.getItem('familyTestAttempts') || '0');
+            localStorage.setItem('familyTestAttempts', attempts + 1);
+            
+            showResult(percentage);
+        }
+
+        // 显示结果
+        function showResult(score) {
+            document.getElementById('testPage').classList.add('hidden');
+            document.getElementById('resultPage').classList.remove('hidden');
+            
+            let result;
+            if (score <= 20) {
+                result = {
+                    emoji: "☀️",
+                    title: "阳光开朗大男孩/女孩",
+                    desc: "你就像清晨的第一缕阳光，温暖又明亮！在充满爱的环境中长大，你拥有坚实的内心和满满的正能量。你懂得爱自己，也懂得爱别人。",
+                    advice: "继续保持这份阳光吧！你的温暖会感染身边的人。记得偶尔也要允许自己有脆弱的时候，完美不是必须的。"
+                };
+            } else if (score <= 40) {
+                result = {
+                    emoji: "🌤️",
+                    title: "偶尔多云的小可爱",
+                    desc: "你是一颗 resilient 的小种子！虽然偶尔会遇到小挫折，但你已经学会了在风雨中成长。你的内心有力量，也有温柔。",
+                    advice: "你已经很棒了！学会善待自己，给自己多一些肯定。那些小乌云终会散去，你的天空会越来越晴朗。"
+                };
+            } else if (score <= 60) {
+                result = {
+                    emoji: "⛅",
+                    title: "阴天模式的小蘑菇",
+                    desc: "你是一只坚强的小蘑菇，在阴暗中也能找到生长的力量。经历过一些情感的风雨，但你依然在努力向上。",
+                    advice: "你的感受是真实的，也是重要的。试着多关注自己的内心需求，学会对自己说'我值得被好好对待'。"
+                };
+            } else if (score <= 80) {
+                result = {
+                    emoji: "🌧️",
+                    title: "小雨淅沥的仙人掌",
+                    desc: "你是一株在干旱中依然存活的仙人掌，有着惊人的生命力。你经历了不少情感的雨季，但你依然站在这里。",
+                    advice: "你的坚强让人心疼。请记得，寻求帮助不是软弱，而是智慧。考虑和信任的朋友聊聊，或寻求专业的心理支持。"
+                };
+            } else {
+                result = {
+                    emoji: "⛈️",
+                    title: "暴风雨幸存者",
+                    desc: "你是一位真正的勇士，经历了情感的风暴却依然前行。你的生存本身就是一种胜利，你的坚韧令人敬佩。",
+                    advice: "请温柔地对待自己。过去的经历不是你的错，你值得被好好爱着。强烈建议寻求专业心理咨询，让专业人士陪你一起疗愈。"
+                };
+            }
+            
+            document.getElementById('resultEmoji').textContent = result.emoji;
+            document.getElementById('resultTitle').textContent = result.title;
+            document.getElementById('resultScore').textContent = score + "分";
+            document.getElementById('resultDesc').textContent = result.desc;
+            document.getElementById('resultAdvice').textContent = result.advice;
+        }
+
+        // 回车提交密码
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkPassword();
+        });
+    </script>
+</body>
+</html>
